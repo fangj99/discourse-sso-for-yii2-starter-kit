@@ -125,6 +125,7 @@ Function changed " public function actionLogin()"
 
 
 
+# Original Documentation:
 
 # yii2-discourse-sso
 
