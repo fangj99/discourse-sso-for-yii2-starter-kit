@@ -30,7 +30,7 @@ https://github.com/Sammaye/yii2-discourse-sso
   ),
 ```
 
-## 4. In the controller you want to use to sso authenticate, you can add following function, this is almost same as the one in original doc, but added one line to make @discourse working
+## 4. In the controller which is used for sso authenticating, we can add following function, this is almost same as the one in original doc, but added one line to make "@discourse" working
 ```
 Yii::setAlias('@discourse', 'https://discourse site address');
 ```
@@ -119,7 +119,8 @@ Function changed " public function actionLogin()"
 
 ```
 
-
+## end of yii2-starter-kit with discourse sso
+##
 
 
 
