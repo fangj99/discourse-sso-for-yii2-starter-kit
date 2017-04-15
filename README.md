@@ -119,6 +119,103 @@ Function changed " public function actionLogin()"
 
 ```
 
+
+## 6. Multiple discourse forum with same sso website, we can create different sso point with same website
+
+### A
+copy 
+frontend/modules/user/controllers/SignInController.php
+to
+frontend/modules/user/controllers/SignInssoController.php
+
+change the following parts
+```
+class SignInssoController extends \yii\web\Controller
+
+```
+
+change '/dev/discourse-sso', to '/dev/discourse-sso-support'
+
+```
+			if($sso = Yii::$app->request->get('sso')){
+				//Yii::warning('sso');
+				$sig = Yii::$app->request->get('sig');
+				
+				//Yii::warning($sso);
+				//Yii::warning($sig);
+				
+				return $this->redirect([
+					'/dev/discourse-sso-support', 
+					'sso' => $sso, 
+					'sig' => $sig
+				]);
+			}
+```
+
+
+
+### B
+
+Copy 
+/frontend/modules/user/views/sign-in
+
+To 
+/frontend/modules/user/views/sign-insso
+
+### C  Create a new function in controller
+```
+	public function actionDiscourseSsoSupport()
+	{
+		$request = Yii::$app->getRequest();
+		$sso = Yii::$app->discourseSso;
+		
+ 		$payload = $request->get('sso');
+		$sig = $request->get('sig');
+
+		if(!($sso->validate($payload, $sig))){
+			// invaild, deny
+			throw new ForbiddenHttpException('Bad SSO request');
+		}
+		
+		$nonce = $sso->getNonce($payload);
+		
+		if(Yii::$app->getUser()->isGuest){
+			// We add session variable to track it after we log the user in so we can redirect them back
+			// This method works well with custom login methods like social networks
+			Yii::$app->getSession()->set('sso', ['sso' => $payload, 'sig' => $sig]);
+			return $this->redirect(['site/login']);
+		}else{
+			$user = Yii::$app->getuser()->getIdentity();
+		}
+		
+		Yii::$app->getSession()->remove('sso');
+		
+		// We send over the data
+		$userparams = [
+			"nonce" => $nonce,
+			"external_id" => (String)$user->id,
+			"email" => $user->email,
+			
+			// Optional - feel free to delete these two
+			"username" => $user->username,
+			"name" => $user->username,
+			
+			//'avatar_url' => Url::to(['image/profile-image', 'id' => (String)$user->_id], 'http')
+		];
+		$q = $sso->buildLoginString($userparams);
+		
+		/// We redirect back
+		Yii::setAlias('@discourse', 'https://another discourse site address');
+		header('Location: ' . Yii::getAlias('@discourse') . '/session/sso_login?' . $q);
+	 
+	}
+```
+
+
+
+
+
+
 ## end of yii2-starter-kit with discourse sso
 ##
 
